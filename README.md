@@ -74,7 +74,8 @@ php -S localhost:8000
 
 | Tool Used | Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
-|dirsearch | | | | |
+|dirsearch |dirsearch -u http://localhost:8000 -e php,html,txt -t 10 |	
+T1595.002 |31151 |(HTTP 4xx errors) repeating more than 14 times within a 90-second window from the same source IP identifying automated path discovery behavior |
 | | | | | |
 | | | | | |
 | | | | | |
