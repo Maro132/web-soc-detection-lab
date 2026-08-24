@@ -84,7 +84,9 @@ php -S localhost:8000
 | **SQL Injection (UNION-based)** | `curl "http://localhost:8000/index.php?id=1'%20UNION%20SELECT%20null,username,password%20FROM%20users--%20-"` | **T1190** (Exploit Public-Facing Application) | **31106** | The decoder matched an embedded SQL syntax pattern (`UNION SELECT`) inside the HTTP GET query string, and because the server returned an HTTP `200 OK` status instead of rejecting the request, rule `31106` (*A web attack returned code 200*) fired to flag potential successful exploitation. |
 
 ---
+| **Path Traversal / LFI** | `curl "http://localhost:8000/index.php?file=../../../../windows/win.ini"` | **T1190** (Exploit Public-Facing Application) / **T1083** (File Discovery) | **31106** | The access log decoder detected dot-dot-slash directory traversal patterns (`../`) targeting an internal operating system configuration file (`win.ini`), while the web server returned an HTTP `200 OK` status code. |
 
+---
 ## 🧪 Automated Attack Execution
 
 Execute the test suite in PowerShell to generate live telemetry:
