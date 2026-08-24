@@ -77,6 +77,13 @@ php -S localhost:8000
 | `dirsearch` | `dirsearch -u http://localhost:8000 -e php,html,txt -t 10` | T1595.002 | 31151 | The correlation rule matched rule `31101` (HTTP 4xx errors) repeating more than 14 times within a 90-second window from the same source IP, identifying automated path discovery behavior. |
 | `sqlmap` | `sqlmap -u "http://localhost:8000/index.php?id=1" --batch` | T1595.002 | 100050 | The custom regex detection rule matched a known automated vulnerability scanner signature (`sqlmap`) transmitted inside the incoming HTTP `User-Agent` header during active testing. |
 ---
+## 🚪 Initial Access & Exploitation (TA0001 / T1190)
+
+| Attack Vector | Payload / Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
+| :--- | :--- | :--- | :--- | :--- |
+| **SQL Injection (UNION-based)** | `curl "http://localhost:8000/index.php?id=1'%20UNION%20SELECT%20null,username,password%20FROM%20users--%20-"` | **T1190** (Exploit Public-Facing Application) | **31106** | The decoder matched an embedded SQL syntax pattern (`UNION SELECT`) inside the HTTP GET query string, and because the server returned an HTTP `200 OK` status instead of rejecting the request, rule `31106` (*A web attack returned code 200*) fired to flag potential successful exploitation. |
+
+---
 
 ## 🧪 Automated Attack Execution
 
