@@ -74,12 +74,8 @@ php -S localhost:8000
 
 | Tool Used | Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
-|dirsearch |dirsearch -u http://localhost:8000 -e php,html,txt -t 10 |	
-T1595.002 |31151 |(HTTP 4xx errors) repeating more than 14 times within a 90-second window from the same source IP identifying automated path discovery behavior |
-| | | | | |
-| | | | | |
-| | | | | |
-| | | | | |
+| `dirsearch` | `dirsearch -u http://localhost:8000 -e php,html,txt -t 10` | T1595.002 | 31151 | The correlation rule matched rule `31101` (HTTP 4xx errors) repeating more than 14 times within a 90-second window from the same source IP, identifying automated path discovery behavior. |
+| `sqlmap` | `sqlmap -u "http://localhost:8000/index.php?id=1" --batch` | T1595.002 | 100050 | The custom regex detection rule matched a known automated vulnerability scanner signature (`sqlmap`) transmitted inside the incoming HTTP `User-Agent` header during active testing. |
 ---
 
 ## 🧪 Automated Attack Execution
