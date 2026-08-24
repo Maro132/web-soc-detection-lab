@@ -3,6 +3,15 @@
 A hands-on Purple Team lab demonstrating end-to-end web attack detection, log telemetry pipeline engineering, and SIEM event correlation using **Wazuh (SIEM/XDR)**, **Docker**, and a lightweight PHP web server.
 
 ---
+## 📑 Table of Contents
+* [Architecture Overview](#architecture-overview)
+* [Core Components](#-core-components)
+* [Lab Deployment](#-lab-deployment)
+* [Active Recon](#active-recon)
+* [Initial Access & Exploitation](#initial-access--exploitation)
+* [SOC Analyst Investigation Flow](#-soc-analyst-investigation-flow)
+
+---
 
 ## Architecture Overview
 
