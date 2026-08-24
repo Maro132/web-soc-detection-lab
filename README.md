@@ -74,7 +74,7 @@ php -S localhost:8000
 
 | Tool Used | Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
-| | | | | |
+|dirsearch | | | | |
 | | | | | |
 | | | | | |
 | | | | | |
