@@ -1,23 +1,127 @@
 # Real-Time Web Application Threat Detection & SOC Lab
 
-A hands-on Purple Team lab demonstrating end-to-end web attack detection, log telemetry pipeline engineering, and SIEM event correlation using **Wazuh (SIEM/XDR)**, **Docker**, and a lightweight custom PHP web server.
+A hands-on Purple Team lab demonstrating end-to-end web attack detection, log telemetry pipeline engineering, and SIEM event correlation using **Wazuh (SIEM/XDR)**, **Docker**, and a lightweight PHP web server.
 
 ---
 
-[ Attacker / Scripts ]
-│ (HTTP Requests: SQLi, XSS, Recon)
-▼
-┌───────────────────────────────────────────────────────────┐
-│ Host System (Windows)                                     │
-│  ├── PHP Server (:8000) ──▶ Generates access.log          │
-│  │                         (Apache Combined Format)       │
-│  │                                   │                     │
-│  └── Wazuh Agent (WazuhSvc) ─────────┘                     │
-│         │ (Encrypted Syslog/TCP :1514)                     │
-└─────────┼─────────────────────────────────────────────────┘
-▼
-┌───────────────────────────────────────────────────────────┐
-│ Docker Containers (Wazuh Single-Node Cluster)             │
-│  ├── wazuh.manager   (Decoders & Detection Engine)        │
-│  ├── wazuh.indexer   (OpenSearch Log Store)               │
-│  └── wazuh.dashboard (Kibana-based Visual UI :443)        │
+## Architecture Overview
+
+```mermaid
+flowchart TD
+    subgraph Attacker_Space["Threat Simulation"]
+        A[Attacker / Test Scripts] -->|HTTP Requests: SQLi, XSS, Recon| B
+    end
+
+    subgraph Host_Machine["Host System (Windows)"]
+        B[PHP Web Server :8000] -->|Generates Events| C[access.log<br>Apache Combined Format]
+        C -->|Monitored by| D[Wazuh Agent Service<br>WazuhSvc]
+    end
+
+    subgraph Docker_Stack["Wazuh SIEM Cluster (Docker)"]
+        D -->|Encrypted Syslog :1514| E[Wazuh Manager<br>Decoders & Rule Engine]
+        E -->|Indexes Alerts| F[(Wazuh Indexer<br>OpenSearch)]
+        F -->|Visualizes Data| G[Wazuh Dashboard :443<br>SOC Analyst UI]
+    end
+
+    style Attacker_Space fill:#1e1e2e,stroke:#f38ba8,stroke-width:2px,color:#fff
+    style Host_Machine fill:#181825,stroke:#89b4fa,stroke-width:2px,color:#fff
+    style Docker_Stack fill:#11111b,stroke:#a6e3a1,stroke-width:2px,color:#fff
+```
+
+---
+
+## ⚙️ Core Components
+
+* **SIEM Platform:** Wazuh Manager & OpenSearch Indexer deployed via Docker Compose.
+* **Telemetry Agent:** Wazuh Windows Agent `v4.9.0`.
+* **Telemetry Standard:** Apache Combined Log Format (`%h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i"`).
+* **Vulnerable Endpoint:** Custom PHP application with live request telemetry parsing.
+
+---
+
+## 🚀 Lab Deployment
+
+**1. Launch Wazuh Stack (Docker)**
+```bash
+git clone https://github.com/wazuh/wazuh-docker.git -b v4.9.0 --depth=1
+cd wazuh-docker/single-node
+docker compose -f generate-indexer-certs.yml run --rm generator
+docker compose up -d
+```
+
+**2. Configure Wazuh Agent Telemetry**
+Add the following block inside `<ossec_config>` in `C:\Program Files (x86)\ossec-agent\ossec.conf`:
+```xml
+<localfile>
+  <location>E:\web-soc-lab\access.log</location>
+  <log_format>apache</log_format>
+</localfile>
+```
+Restart the agent service via PowerShell (Administrator):
+```powershell
+Restart-Service -Name WazuhSvc
+```
+
+**3. Start Target Application**
+```powershell
+cd app/
+php -S localhost:8000
+```
+
+---
+
+## 🎯 Simulated Attack Vectors & Detection Mapping
+
+| Attack Vector | Payload / Action | MITRE ATT&CK | Wazuh Rule ID | Severity |
+| :--- | :--- | :--- | :--- | :--- |
+| **SQL Injection** | `id=1' UNION SELECT null,username,password FROM users-- -` | **T1190** (Exploit Public-Facing App) | `31101` / `31106` | Level 6 (Medium) |
+| **Path Traversal / LFI** | `page=../../../../windows/win.ini` | **T1083** (File & Directory Discovery) | `31106` | Level 6 (Medium) |
+| **Reflected XSS** | `q=<script>alert('SOC-Test')</script>` | **T1059.007** (JavaScript Execution) | `31105` / `31106` | Level 6 (Medium) |
+| **Directory Fuzzing** | Multi-path Reconnaissance (404 Bursts) | **T1595.002** (Vulnerability Scanning) | `31102` / `31533` | Level 10 (High) |
+| **Restricted Area Probe**| Direct probe to `/admin-login-secret-page.php` | **T1595** (Active Reconnaissance) | `31108` | Level 5 (Low) |
+
+---
+
+## 🧪 Automated Attack Execution
+
+Execute the test suite in PowerShell to generate live telemetry:
+
+```powershell
+$TargetUrl = "http://localhost:8000"
+
+# 1. SQL Injection Simulation (T1190)
+Invoke-WebRequest -Uri "$TargetUrl/index.php?id=1%27%20UNION%20SELECT%20null,username,password%20FROM%20users--%20-" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
+
+# 2. XSS Simulation (T1059.007)
+Invoke-WebRequest -Uri "$TargetUrl/index.php?q=%3Cscript%3Ealert(%27SOC-Test%27)%3C/script%3E" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
+
+# 3. Path Traversal Simulation (T1083)
+Invoke-WebRequest -Uri "$TargetUrl/index.php?page=../../../../windows/win.ini" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
+
+# 4. Directory Fuzzing Simulation (T1595.002)
+$wordlist = @("admin", "login", "secret", "config", "backup", "db", "admin-login-secret-page.php", "phpmyadmin")
+foreach ($path in $wordlist) {
+    Invoke-WebRequest -Uri "$TargetUrl/$path" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
+}
+```
+
+---
+
+## 🔍 SOC Analyst Investigation Flow
+
+1. Open **Wazuh Dashboard** -> **Threat Hunting** -> **Events**.
+2. Filter by Agent & Web rules:
+   ```text
+   agent.name: "Windows-Host" and rule.groups: "web"
+   ```
+3. Key fields analyzed during triage:
+   * **`data.url`**: Pinpoints injected parameters and payloads.
+   * **`data.srcip`**: Identifies source attacker IP.
+   * **`rule.mitre.id`**: Correlates the event directly with MITRE ATT&CK tactics.
+
+---
+
+## 💡 Key Engineering Takeaways
+
+* **Log Standardization:** Default Wazuh web decoders require exact field structures. Normalizing custom PHP output to standard **Apache Combined Log Format** enabled native parsing and MITRE ATT&CK rule triggers without custom regex decoders.
+* **Concurrency Handling:** Managed file locks on Windows to allow concurrent appending from the PHP process while the OSSEC agent held active read handles.
