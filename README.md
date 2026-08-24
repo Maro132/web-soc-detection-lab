@@ -70,16 +70,15 @@ php -S localhost:8000
 
 ---
 
-## 🎯 Simulated Attack Vectors & Detection Mapping
+## 🎯 Active Recon
 
-| Attack Vector | Payload / Action | MITRE ATT&CK | Wazuh Rule ID | Severity |
+| Tool Used | Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
-| **SQL Injection** | `id=1' UNION SELECT null,username,password FROM users-- -` | **T1190** (Exploit Public-Facing App) | `31101` / `31106` | Level 6 (Medium) |
-| **Path Traversal / LFI** | `page=../../../../windows/win.ini` | **T1083** (File & Directory Discovery) | `31106` | Level 6 (Medium) |
-| **Reflected XSS** | `q=<script>alert('SOC-Test')</script>` | **T1059.007** (JavaScript Execution) | `31105` / `31106` | Level 6 (Medium) |
-| **Directory Fuzzing** | Multi-path Reconnaissance (404 Bursts) | **T1595.002** (Vulnerability Scanning) | `31102` / `31533` | Level 10 (High) |
-| **Restricted Area Probe**| Direct probe to `/admin-login-secret-page.php` | **T1595** (Active Reconnaissance) | `31108` | Level 5 (Low) |
-
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
+| | | | | |
 ---
 
 ## 🧪 Automated Attack Execution
