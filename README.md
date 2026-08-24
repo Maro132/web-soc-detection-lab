@@ -70,7 +70,7 @@ php -S localhost:8000
 
 ---
 
-## 🎯 Active Recon
+## Active Recon
 
 | Tool Used | Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
