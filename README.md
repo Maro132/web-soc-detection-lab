@@ -83,30 +83,8 @@ php -S localhost:8000
 | :--- | :--- | :--- | :--- | :--- |
 | **SQL Injection (UNION-based)** | `curl "http://localhost:8000/index.php?id=1'%20UNION%20SELECT%20null,username,password%20FROM%20users--%20-"` | **T1190** (Exploit Public-Facing Application) | **31106** | The decoder matched an embedded SQL syntax pattern (`UNION SELECT`) inside the HTTP GET query string, and because the server returned an HTTP `200 OK` status instead of rejecting the request, rule `31106` (*A web attack returned code 200*) fired to flag potential successful exploitation. |
 | **Path Traversal / LFI** | `curl "http://localhost:8000/index.php?file=../../../../windows/win.ini"` | **T1190** (Exploit Public-Facing Application) / **T1083** (File Discovery) | **31106** | The access log decoder detected dot-dot-slash directory traversal patterns (`../`) targeting an internal operating system configuration file (`win.ini`), while the web server returned an HTTP `200 OK` status code. |
+| **Reflected XSS** | `curl "http://localhost:8000/index.php?search=<script>alert('XSS')</script>"` | **T1190** (Exploit Public-Facing Application) / **T1059.007** (JavaScript Execution) | **31106** | The access log decoder identified client-side script injection tags (`<script>`) passed into parameter values, accompanied by a successful HTTP `200 OK` web server response. |
 
----
-## 🧪 Automated Attack Execution
-
-Execute the test suite in PowerShell to generate live telemetry:
-
-```powershell
-$TargetUrl = "http://localhost:8000"
-
-# 1. SQL Injection Simulation (T1190)
-Invoke-WebRequest -Uri "$TargetUrl/index.php?id=1%27%20UNION%20SELECT%20null,username,password%20FROM%20users--%20-" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
-
-# 2. XSS Simulation (T1059.007)
-Invoke-WebRequest -Uri "$TargetUrl/index.php?q=%3Cscript%3Ealert(%27SOC-Test%27)%3C/script%3E" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
-
-# 3. Path Traversal Simulation (T1083)
-Invoke-WebRequest -Uri "$TargetUrl/index.php?page=../../../../windows/win.ini" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
-
-# 4. Directory Fuzzing Simulation (T1595.002)
-$wordlist = @("admin", "login", "secret", "config", "backup", "db", "admin-login-secret-page.php", "phpmyadmin")
-foreach ($path in $wordlist) {
-    Invoke-WebRequest -Uri "$TargetUrl/$path" -UseBasicParsing -ErrorAction SilentlyContinue | Out-Null
-}
-```
 
 ---
 
@@ -115,16 +93,9 @@ foreach ($path in $wordlist) {
 1. Open **Wazuh Dashboard** -> **Threat Hunting** -> **Events**.
 2. Filter by Agent & Web rules:
    ```text
-   agent.name: "Windows-Host" and rule.groups: "web"
+   rule.groups: "web"
    ```
 3. Key fields analyzed during triage:
    * **`data.url`**: Pinpoints injected parameters and payloads.
    * **`data.srcip`**: Identifies source attacker IP.
    * **`rule.mitre.id`**: Correlates the event directly with MITRE ATT&CK tactics.
-
----
-
-## 💡 Key Engineering Takeaways
-
-* **Log Standardization:** Default Wazuh web decoders require exact field structures. Normalizing custom PHP output to standard **Apache Combined Log Format** enabled native parsing and MITRE ATT&CK rule triggers without custom regex decoders.
-* **Concurrency Handling:** Managed file locks on Windows to allow concurrent appending from the PHP process while the OSSEC agent held active read handles.
