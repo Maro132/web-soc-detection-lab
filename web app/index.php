@@ -1,31 +1,41 @@
 <?php
-// 1. استخراج المسار ونوع الطلب (Method)
+// 1. Extract path, method, and parameters
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $responseBody = "";
 $statusCode = 200;
 
-// 2. معالجة المسارات والتحقق من تسجيل الدخول (Authentication Logic)
+// 2. Application Routing & Handlers
 if ($requestPath === '/' || $requestPath === '/index.php') {
+    // Check for Command Execution parameter simulation (?cmd= or ?ip=)
+    if (isset($_GET['cmd'])) {
+        $cmd = $_GET['cmd'];
+        $statusCode = 200;
+        // Mocking execution response for testing
+        $responseBody = "<h1>Command Diagnostic Output</h1><pre>Executed: " . htmlspecialchars($cmd) . "\nResult: desktop-soc-host\\marwan (mock response)</pre>";
+    } else {
+        $statusCode = 200;
+        $responseBody = "<h1>Web SOC Lab</h1><p>Web Application Threat Detection & Recon Monitoring Environment.</p>";
+    }
+
+} elseif ($requestPath === '/ping.php') {
+    $host = $_GET['host'] ?? '127.0.0.1';
     $statusCode = 200;
-    $responseBody = "<h1>Web SOC Lab</h1><p>Web Application Threat Detection & Recon Monitoring Environment.</p>";
+    $responseBody = "<h1>Network Diagnostics Utility</h1><pre>PING " . htmlspecialchars($host) . " ... Success.</pre>";
 
 } elseif ($requestPath === '/login.php') {
     if ($method === 'POST') {
         $username = $_POST['user'] ?? '';
         $password = $_POST['pass'] ?? '';
 
-        // بيانات الاعتماد الصحيحة للاختبار
         if ($username === 'admin' && $password === 'SuperSecretPassword123!') {
             $statusCode = 200;
-            $responseBody = json_encode(["status" => "success", "message" => "Login Successful! Welcome admin."]);
+            $responseBody = json_encode(["status" => "success", "message" => "Login Successful!"]);
         } else {
-            // إرجاع كود 401 Unauthorized عند فشل تسجيل الدخول
             $statusCode = 401;
             $responseBody = json_encode(["status" => "error", "message" => "Invalid credentials."]);
         }
     } else {
-        // عرض صفحة الدخول البسيطة لطلبات GET
         $statusCode = 200;
         $responseBody = '<form method="POST" action="/login.php">
             <input type="text" name="user" placeholder="Username" required><br>
@@ -43,10 +53,9 @@ if ($requestPath === '/' || $requestPath === '/index.php') {
     $responseBody = "<h1>404 Not Found</h1><p>The requested URL was not found on this server.</p>";
 }
 
-// 3. تعيين كود الاستجابة HTTP
 http_response_code($statusCode);
 
-// 4. توليد سجل التتبع بصيغة Apache Combined القياسية
+// 3. Generate Apache Combined Log Format entry
 $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 $timestamp = date('d/M/Y:H:i:s O');
 $uri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -55,7 +64,6 @@ $contentLength = strlen($responseBody);
 $referer = $_SERVER['HTTP_REFERER'] ?? '-';
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '-';
 
-// Apache Combined Log Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i"
 $logEntry = sprintf(
     '%s - - [%s] "%s %s %s" %d %d "%s" "%s"' . PHP_EOL,
     $ip,
@@ -69,9 +77,8 @@ $logEntry = sprintf(
     $userAgent
 );
 
-// 5. كتابة السجل في access.log
+// 4. Append to access.log
 $logFile = __DIR__ . '/access.log';
 file_put_contents($logFile, $logEntry, FILE_APPEND);
 
-// 6. إرسال الاستجابة
 echo $responseBody;
