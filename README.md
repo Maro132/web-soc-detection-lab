@@ -101,7 +101,7 @@ php -S localhost:8000
 
 ---
 
-## ⚡ Execution (TA0002 / T1059)
+## Execution (TA0002 / T1059)
 
 | Attack Vector | Payload / Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
 | :--- | :--- | :--- | :--- | :--- |
