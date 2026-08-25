@@ -11,6 +11,7 @@ A hands-on Purple Team lab demonstrating end-to-end web attack detection, log te
 * [Lab Deployment](#-lab-deployment)
 * [Active Recon](#active-recon)
 * [Initial Access & Exploitation](#initial-access--exploitation)
+* [Execution](#-execution-ta0002--t1059)
 * [SOC Analyst Investigation Flow](#-soc-analyst-investigation-flow)
 
 ---
@@ -99,6 +100,12 @@ php -S localhost:8000
 
 
 ---
+
+## ⚡ Execution (TA0002 / T1059)
+
+| Attack Vector | Payload / Command Used | MITRE ATT&CK | Wazuh Rule ID | Why We Got the Alert |
+| :--- | :--- | :--- | :--- | :--- |
+| **Command Injection (RCE)** | `curl "http://localhost:8000/index.php?cmd=whoami"` | **T1059** (Command and Scripting Interpreter) | **100070** | The custom correlation rule inspected incoming HTTP request parameters and matched high-severity OS execution commands (`whoami`), raising a Level 12 security alert. |
 
 ## 🔍 SOC Analyst Investigation Flow
 
