@@ -1,1 +1,64 @@
+<!-- Local rules -->
 
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
+
+<!-- Example -->
+<group name="local,syslog,sshd,">
+
+  <!--
+  Dec 10 01:02:02 host sshd[1234]: Failed none for root from 1.1.1.1 port 1066 ssh2
+  -->
+  <rule id="100001" level="5">
+    <if_sid>5716</if_sid>
+    <srcip>1.1.1.1</srcip>
+    <description>sshd: authentication failed from IP 1.1.1.1.</description>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,</group>
+  </rule>
+  
+  <!-- Custom Detection Rule for Reconnaissance & Vulnerability Scanners -->
+  <rule id="100050" level="10">
+    <if_sid>31100</if_sid>
+    <match>Nikto|sqlmap|dirsearch|Gobuster|Nuclei|Nmap|masscan|Acunetix|Hydra|wpscan</match>
+    <description>Active Recon: Known Security Scanner User-Agent Detected</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>web,web_scan,recon,</group>
+    
+  </rule>
+  
+  <!-- Custom Command Injection Detection Rule -->
+  <rule id="100070" level="12">
+    <if_group>web</if_group>
+    <match>whoami|cat%20|/bin/sh|/bin/bash|powershell|cmd.exe|ipconfig|ifconfig|uname%20|net%20user|dir%20</match>
+    <description>Execution: OS Command Injection Payload Detected in HTTP Request</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+    <group>web,command_injection,execution,attack,</group>
+  </rule>
+
+<!-- Custom Rule for Suspicious Web Shell & Command Execution Parameters -->
+  <rule id="100080" level="11">
+    <if_group>web</if_group>
+    <match>?cmd=|?exec=|?command=|?eval=|?shell=|?run=</match>
+    <description>Execution: Suspicious Web Shell or Command Execution Parameter Detected</description>
+    <mitre>
+      <id>T1505.003</id>
+    </mitre>
+    <group>web,webshell,execution,attack,</group>
+  </rule>
+  
+  <!-- Custom Rule for Credential & Sensitive File Access (MITRE T1552.001) -->
+  <rule id="100090" level="10">
+    <if_group>web</if_group>
+    <match>.env|.git/config|wp-config.php|config.inc.php|id_rsa|.aws/credentials|database.sqlite|shadow</match>
+    <description>Credential Access: Attempt to Access Sensitive File Containing Credentials</description>
+    <mitre>
+      <id>T1552.001</id>
+    </mitre>
+    <group>web,credential_access,sensitive_files,attack,</group>
+  </rule>
+  
+</group>
